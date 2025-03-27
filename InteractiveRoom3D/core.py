@@ -1,9 +1,8 @@
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
-from .textures import load_texture
 from .room import draw_room
-from .camera import camera_pos, camera_front, camera_up, speed, sensitivity, update_camera_direction
+from .camera import *
 import numpy as np
 
 wall_texture = None
@@ -18,11 +17,6 @@ def init():
 
     # Habilitar sombreamento suave
     glShadeModel(GL_SMOOTH)
-
-    # carrega as texturas
-    global wall_texture
-    glEnable(GL_TEXTURE_2D)
-    wall_texture = load_texture("texturas/wall.jpg")
 
 def display():
     """ Renderiza a cena """
@@ -57,7 +51,32 @@ def keyboard(key, x, y):
 
 def mouse_motion(x, y):
     """ Atualiza a direção da câmera com o movimento do mouse """
-    update_camera_direction(x, y)
+    global yaw, pitch, last_x, last_y, first_mouse, camera_front
+
+    if first_mouse:
+        last_x, last_y = x, y
+        first_mouse = False
+
+    # Calcula deslocamento do mouse
+    x_offset = (x - last_x) * sensitivity
+    y_offset = (last_y - y) * sensitivity  # Invertido porque o OpenGL tem Y ao contrário
+    last_x, last_y = x, y
+
+    # Atualiza ângulos
+    yaw += x_offset
+    pitch += y_offset
+
+    # Restringe o pitch para evitar giros indesejados
+    pitch = max(-89.0, min(89.0, pitch))
+
+    # Calcula nova direção da câmera
+    direction = np.array([
+        np.cos(np.radians(yaw)) * np.cos(np.radians(pitch)),
+        np.sin(np.radians(pitch)),
+        np.sin(np.radians(yaw)) * np.cos(np.radians(pitch))
+    ])
+    camera_front = direction / np.linalg.norm(direction)
+
     glutPostRedisplay()
 
 def setup():
