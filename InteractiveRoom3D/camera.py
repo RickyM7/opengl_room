@@ -1,7 +1,7 @@
 import numpy as np
 
 # Posição e ângulo da câmera
-camera_pos = np.array([0.0, 1.0, 0.0])  # Posição inicial
+camera_pos = np.array([0.0, 2.0, 3.0])  # Posição inicial
 camera_front = np.array([0.0, 0.0, -1.0])  # Direção inicial
 camera_up = np.array([0.0, 1.0, 0.0])  # Vetor para cima
 
