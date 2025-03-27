@@ -1,7 +1,8 @@
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
-from InteractiveRoom3D.core import init, setup, display, keyboard, mouse_motion
+from InteractiveRoom3D.core import init, setup, display, keyboard, mouse_motion, mouse_button
+
 
 def main():
     """ Função principal """
@@ -13,7 +14,8 @@ def main():
     init()
     glutDisplayFunc(display)
     glutKeyboardFunc(keyboard)
-    glutPassiveMotionFunc(mouse_motion)  # Captura movimento do mouse
+    glutMouseFunc(mouse_button)
+    glutMotionFunc(mouse_motion)
     setup()
     glutMainLoop()
 

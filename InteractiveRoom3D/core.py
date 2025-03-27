@@ -49,35 +49,65 @@ def keyboard(key, x, y):
 
     glutPostRedisplay()
 
+def mouse_button(button, state, x, y):
+    """Callback para eventos de clique do mouse"""
+    global left_button_down, right_button_down, last_x, last_y
+
+    if button == GLUT_LEFT_BUTTON:
+        if state == GLUT_DOWN:
+            left_button_down = True
+            last_x = x
+            last_y = y
+        elif state == GLUT_UP:
+            left_button_down = False
+
+    elif button == GLUT_RIGHT_BUTTON:
+        if state == GLUT_DOWN:
+            right_button_down = True
+            last_x = x
+            last_y = y
+        elif state == GLUT_UP:
+            right_button_down = False
+
+
 def mouse_motion(x, y):
-    """ Atualiza a direção da câmera com o movimento do mouse """
-    global yaw, pitch, last_x, last_y, first_mouse, camera_front
+    """Callback para eventos de movimento do mouse"""
+    global angle_x, angle_y, last_x, last_y, camera_front
 
-    if first_mouse:
-        last_x, last_y = x, y
-        first_mouse = False
+    if left_button_down:
+        # Calcula a mudança de posição do mouse
+        dx = x - last_x
+        dy = y - last_y
 
-    # Calcula deslocamento do mouse
-    x_offset = (x - last_x) * sensitivity
-    y_offset = (last_y - y) * sensitivity  # Invertido porque o OpenGL tem Y ao contrário
-    last_x, last_y = x, y
+        # Ajusta os ângulos (inverte dx e dy para movimento natural)
+        angle_y += dx * 0.5  # Rotação horizontal (yaw)
+        angle_x -= dy * 0.5  # Rotação vertical (pitch) - inverte dy
 
-    # Atualiza ângulos
-    yaw += x_offset
-    pitch += y_offset
+        # Limita a rotação vertical para evitar flips
+        angle_x = max(-70, min(70, angle_x))  # Limite mais natural (-89° a 89°)
+        angle_y = max(-60, min(60, angle_y))  # Limite mais natural (-89° a 89°)
 
-    # Restringe o pitch para evitar giros indesejados
-    pitch = max(-89.0, min(89.0, pitch))
+        # Converte para radianos
+        yaw = np.radians(angle_y)
+        pitch = np.radians(angle_x)
 
-    # Calcula nova direção da câmera
-    direction = np.array([
-        np.cos(np.radians(yaw)) * np.cos(np.radians(pitch)),
-        np.sin(np.radians(pitch)),
-        np.sin(np.radians(yaw)) * np.cos(np.radians(pitch))
-    ])
-    camera_front = direction / np.linalg.norm(direction)
+        # Calcula o novo vetor camera_front
+        camera_front[0] = np.cos(pitch) * np.sin(yaw)  # X
+        camera_front[1] = np.sin(pitch)                # Y
+        camera_front[2] = -np.cos(pitch) * np.cos(yaw) # Z
 
-    glutPostRedisplay()
+        # Atualiza as últimas posições do mouse
+        last_x = x
+        last_y = y
+
+        # Redesenha a cena
+        glutPostRedisplay()
+
+    elif right_button_down:
+        dy = y - last_y
+        last_y = y
+        glutPostRedisplay()
+
 
 def setup():
     """ Configura o OpenGL """
