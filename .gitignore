@@ -2,3 +2,6 @@ _main.py
 pyopengl.py
 teste.py
 */__pycache__/
+.venv/
+.git/
+.idea/
