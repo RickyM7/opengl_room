@@ -7,6 +7,26 @@ import numpy as np
 
 wall_texture = None
 
+# Limites do quarto
+room_limits = {
+    "x_min": -5.0,
+    "x_max": 5.0,
+    "y_min": 0.5,  # Altura mínima (acima do chão)
+    "y_max": 5.0,  # Altura máxima (abaixo do teto)
+    "z_min": -5.0,
+    "z_max": 5.0
+}
+
+# Limites da mesa (opcional, para evitar colisão com a mesa)
+table_limits = {
+    "x_min": -1.1,
+    "x_max": 1.1,
+    "y_min": 0.9,  # Altura do tampo da mesa
+    "y_max": 1.0,
+    "z_min": -0.6,
+    "z_max": 0.6
+}
+
 def init():
     """Inicializa as configurações do OpenGL"""
     glClearColor(0.0, 0.0, 0.0, 1.0)  # Fundo preto
@@ -31,21 +51,44 @@ def display():
     draw_room()
     glutSwapBuffers()
 
+def check_collision(new_pos):
+    """Verifica se a nova posição da câmera está dentro dos limites"""
+    # Verifica os limites do quarto
+    if not (room_limits["x_min"] <= new_pos[0] <= room_limits["x_max"]):
+        return False
+    if not (room_limits["y_min"] <= new_pos[1] <= room_limits["y_max"]):
+        return False
+    if not (room_limits["z_min"] <= new_pos[2] <= room_limits["z_max"]):
+        return False
+
+    # Verifica os limites da mesa (opcional)
+    if (table_limits["x_min"] <= new_pos[0] <= table_limits["x_max"] and
+        table_limits["y_min"] <= new_pos[1] <= table_limits["y_max"] and
+        table_limits["z_min"] <= new_pos[2] <= table_limits["z_max"]):
+        return False
+
+    return True
+
 def keyboard(key, x, y):
     """ Gerencia a movimentação do usuário usando WASD """
     global camera_pos
 
     direction = camera_front * speed
     right = np.cross(camera_front, camera_up) * speed
+    new_pos = camera_pos.copy()
 
     if key == b'w':  # Para frente
-        camera_pos += direction
+        new_pos += direction
     elif key == b's':  # Para trás
-        camera_pos -= direction
+        new_pos -= direction
     elif key == b'a':  # Para a esquerda
-        camera_pos -= right
+        new_pos -= right
     elif key == b'd':  # Para a direita
-        camera_pos += right
+        new_pos += right
+
+    # Verifica colisão antes de atualizar a posição
+    if check_collision(new_pos):
+        camera_pos = new_pos
 
     glutPostRedisplay()
 
