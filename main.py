@@ -1,11 +1,9 @@
-from OpenGL.GL import *
 from OpenGL.GLUT import *
-from OpenGL.GLU import *
-from InteractiveRoom3D.core import init, setup, display, keyboard, mouse_motion, mouse_button
-
+from InteractiveRoom3D.core import init, setup, display, keyboard
+from InteractiveRoom3D.camera import mouse_button, mouse_motion
 
 def main():
-    """ Função principal """
+    """Função principal"""
     glutInit()
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
     glutInitWindowSize(800, 600)
