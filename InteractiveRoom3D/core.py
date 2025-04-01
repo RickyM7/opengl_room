@@ -2,7 +2,8 @@ from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
 from .room import draw_room
-from .camera import camera_pos, camera_front, camera_up, move_camera
+from .camera import camera_pos, camera_front, camera_up, move_camera, speed
+import numpy as np
 
 # Variáveis para a luz
 light_on = False  # Estado inicial da luz (desligada)
@@ -10,6 +11,26 @@ light_position = [0.0, 2.0, 0.0, 1.0]  # Posição da luminária
 light_ambient = [0.1, 0.1, 0.1, 1.0]  # Luz ambiente um pouco mais clara
 light_diffuse = [1.5, 1.5, 1.2, 1.0]  # Luz difusa mais intensa (levemente amarelada)
 light_specular = [1.0, 1.0, 1.0, 1.0]  # Luz especular branca
+
+# Limites do quarto
+room_limits = {
+    "x_min": -5.0,
+    "x_max": 5.0,
+    "y_min": 0.5,  # Altura mínima (acima do chão)
+    "y_max": 5.0,  # Altura máxima (abaixo do teto)
+    "z_min": -5.0,
+    "z_max": 5.0
+}
+
+# Limites da mesa (opcional, para evitar colisão com a mesa)
+table_limits = {
+    "x_min": -1.1,
+    "x_max": 1.1,
+    "y_min": 0.9,  # Altura do tampo da mesa
+    "y_max": 1.0,
+    "z_min": -0.6,
+    "z_max": 0.6
+}
 
 def init():
     """Inicializa as configurações do OpenGL"""
@@ -59,10 +80,44 @@ def display():
 
     glutSwapBuffers()
 
+def check_collision(new_pos):
+    """Verifica se a nova posição da câmera está dentro dos limites"""
+    # Verifica os limites do quarto
+    if not (room_limits["x_min"] <= new_pos[0] <= room_limits["x_max"]):
+        return False
+    if not (room_limits["y_min"] <= new_pos[1] <= room_limits["y_max"]):
+        return False
+    if not (room_limits["z_min"] <= new_pos[2] <= room_limits["z_max"]):
+        return False
+
+    # Verifica os limites da mesa (opcional)
+    if (table_limits["x_min"] <= new_pos[0] <= table_limits["x_max"] and
+        table_limits["y_min"] <= new_pos[1] <= table_limits["y_max"] and
+        table_limits["z_min"] <= new_pos[2] <= table_limits["z_max"]):
+        return False
+
+    return True
+
 def keyboard(key, x, y):
     """Gerencia a movimentação do usuário e a tecla espaço para a luz"""
-    global light_on
+    global light_on, camera_pos
 
+    direction = camera_front * speed
+    right = np.cross(camera_front, camera_up) * speed
+    new_pos = camera_pos.copy()
+
+    if key == b'w':  # Para frente
+        new_pos += direction
+    elif key == b's':  # Para trás
+        new_pos -= direction
+    elif key == b'a':  # Para a esquerda
+        new_pos -= right
+    elif key == b'd':  # Para a direita
+        new_pos += right
+
+    # Verifica colisão antes de atualizar a posição
+    if check_collision(new_pos):
+        camera_pos = new_pos
     # Movimentação da câmera
     move_camera(key, x, y)
 
